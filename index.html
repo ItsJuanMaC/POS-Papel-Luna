@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Papelería Papel y Luna</title>
+    <link rel="stylesheet" href="mainPageStyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="app.js" defer></script>
+    <script src="ventas.js" defer></script>
+    <script src="ventasGuardadas.js" defer></script>
+    <script src="crud.js" defer></script>
+    <script src="gestion.js" defer></script>
+    <script src="compras.js" defer></script>
+</head>
+
+<body>
+
+    <!-- ===================== VENTAS MODAL ===================== -->
+    <div id="ventasOverlay" class="crudOverlay remove">
+        <div id="ventasModal" class="crudModal ventasModal">
+            <div class="crudHeader">
+                <h2>Finalizar Compra</h2>
+                <button id="closeVentas" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="ventasResumen" class="ventasResumen"></div>
+            <div id="ventasMetodos" class="ventasMetodos">
+                <h3>Selecciona un método de pago</h3>
+                <div id="metodosContainer" class="metodosContainer"></div>
+            </div>
+            <div id="ventasFormPago" class="ventasFormPago"></div>
+            <div id="ventasAccion"></div>
+        </div>
+    </div>
+
+    <!-- ===================== HISTORIAL MODAL ===================== -->
+    <div id="historialOverlay" class="crudOverlay remove">
+        <div id="historialModal" class="crudModal">
+            <div class="crudHeader">
+                <h2><i class="fa-solid fa-chart-line"></i> Historial de Ventas</h2>
+                <button id="closeHistorial" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="historialResumenTop" class="historialResumenTop"></div>
+            <div id="historialLista" class="historialLista"></div>
+        </div>
+    </div>
+
+
+    <!-- ===================== VENTAS GUARDADAS MODAL ===================== -->
+    <div id="ventasGuardadasOverlay" class="crudOverlay remove">
+        <div id="ventasGuardadasModal" class="crudModal">
+            <div class="crudHeader">
+                <h2><i class="fa-solid fa-bookmark"></i> Ventas Guardadas</h2>
+                <button id="closeVentasGuardadas" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="vgLista" class="historialLista"></div>
+        </div>
+    </div>
+
+    <!-- ===================== FACTURA MODAL ===================== -->
+    <div id="facturaOverlay" class="crudOverlay remove">
+        <div id="facturaModal" class="crudModal facturaModal">
+            <div class="crudHeader">
+                <h2><i class="fa-solid fa-receipt"></i> Recibo de Compra</h2>
+                <button id="closeFactura" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <!-- Client data form -->
+            <div id="facturaClienteForm" class="facturaClienteForm">
+                <h3>Datos del Cliente <span class="labelHint">(opcional)</span></h3>
+                <div class="formRow">
+                    <label>Nombre</label>
+                    <input type="text" id="clienteNombre" placeholder="Nombre del cliente">
+                </div>
+                <div class="formRow">
+                    <label>Teléfono</label>
+                    <input type="tel" id="clienteTelefono" placeholder="Número de teléfono">
+                </div>
+                <div class="formRow">
+                    <label>Correo</label>
+                    <input type="email" id="clienteCorreo" placeholder="correo@ejemplo.com">
+                </div>
+                <button id="btnGenerarFactura" class="btnGuardar" style="width:100%;margin-top:0.5em;">
+                    <i class="fa-solid fa-receipt"></i> Generar Recibo
+                </button>
+            </div>
+            <!-- Printable bill -->
+            <div id="facturaContenido" class="facturaContenido remove"></div>
+            <div id="facturaAcciones" class="facturaAcciones remove">
+                <button id="btnImprimir" class="btnConfirmarFinal" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== CRUD MODAL ===================== -->
+    <div id="crudOverlay" class="crudOverlay remove">
+        <div id="crudModal" class="crudModal">
+            <div class="crudHeader">
+                <h2>Gestionar Productos</h2>
+                <button id="closeCrud" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Form -->
+            <form id="productForm" class="crudForm">
+                <input type="hidden" id="editId">
+                <div class="formRow">
+                    <label>Nombre</label>
+                    <input type="text" id="formName" placeholder="Nombre del producto" required>
+                </div>
+                <div class="formRow">
+                    <label>Precio</label>
+                    <input type="number" id="formPrice" placeholder="Precio" required min="1">
+                </div>
+                <div class="formRow">
+                    <label>Stock</label>
+                    <input type="number" id="formStock" placeholder="Stock" required min="0">
+                </div>
+                <div class="formRow">
+                    <label>Categoría</label>
+                    <select id="formCategoria" required>
+                        <option value="" disabled selected>Selecciona una categoría</option>
+                        <option value="Otro">Otro…</option>
+                    </select>
+                    <input type="text" id="formCategoriaCustom" placeholder="Escribe la categoría" class="remove">
+                </div>
+                <div class="formRow">
+                    <label>Costo <span class="labelHint">(precio de compra)</span></label>
+                    <input type="number" id="formCosto" placeholder="Costo del producto" min="0">
+                </div>
+                <div class="formRow">
+                    <label>URL Imagen</label>
+                    <input type="text" id="formImage" placeholder="https://..." required>
+                </div>
+                <div class="formButtons">
+                    <button type="submit" id="formSubmitBtn" class="btnGuardar">Guardar Producto</button>
+                    <button type="button" id="cancelEdit" class="btnCancelar remove">Cancelar Edición</button>
+                </div>
+            </form>
+
+            <!-- Product List inside modal -->
+            <div id="crudProductList" class="crudProductList"></div>
+        </div>
+    </div>
+
+
+
+    <!-- ===================== PROVEEDORES MODAL ===================== -->
+    <div id="proveedoresOverlay" class="crudOverlay remove">
+        <div id="proveedoresModal" class="crudModal">
+            <div class="crudHeader">
+                <h2><i class="fa-solid fa-truck"></i> Proveedores</h2>
+                <button id="closeProveedores" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="proveedorForm" class="crudForm clienteForm">
+                <input type="hidden" id="proveedorEditId">
+                <div class="formRow">
+                    <label>Entidad</label>
+                    <input type="text" id="proveedorFormEntidad" placeholder="Nombre de la entidad" required>
+                </div>
+                <div class="formRow">
+                    <label>Teléfono</label>
+                    <input type="tel" id="proveedorFormTelefono" placeholder="Número de teléfono">
+                </div>
+                <div class="formRow">
+                    <label>Correo</label>
+                    <input type="email" id="proveedorFormCorreo" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="formButtons">
+                    <button type="button" id="proveedorFormSubmit" class="btnGuardar">Guardar Proveedor</button>
+                    <button type="button" id="proveedorFormCancelar" class="btnCancelar remove">Cancelar Edición</button>
+                </div>
+            </div>
+            <div class="clientesSearchBox">
+                <input type="search" id="proveedoresSearch" placeholder="Buscar proveedor…">
+            </div>
+            <div id="proveedoresLista" class="crudProductList"></div>
+        </div>
+    </div>
+
+    <!-- ===================== CATEGORIAS MODAL ===================== -->
+    <div id="categoriasOverlay" class="crudOverlay remove">
+        <div id="categoriasModal" class="crudModal">
+            <div class="crudHeader">
+                <h2><i class="fa-solid fa-tags"></i> Categorías</h2>
+                <button id="closeCategorias" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="categoriaForm" class="crudForm clienteForm">
+                <input type="hidden" id="categoriaEditId">
+                <div class="formRow">
+                    <label>Categoría</label>
+                    <input type="text" id="categoriaFormNombre" placeholder="Nombre de la categoría" required>
+                </div>
+                <div class="formButtons">
+                    <button type="button" id="categoriaFormSubmit" class="btnGuardar">Guardar Categoría</button>
+                    <button type="button" id="categoriaFormCancelar" class="btnCancelar remove">Cancelar Edición</button>
+                </div>
+            </div>
+            <div class="clientesSearchBox">
+                <input type="search" id="categoriasSearch" placeholder="Buscar categoría…">
+            </div>
+            <div id="categoriasLista" class="crudProductList"></div>
+        </div>
+    </div>
+
+    <!-- ===================== CLIENTES MODAL ===================== -->
+    <div id="clientesOverlay" class="crudOverlay remove">
+        <div id="clientesModal" class="crudModal">
+            <div class="crudHeader">
+                <h2><i class="fa-solid fa-users"></i> Clientes</h2>
+                <button id="closeClientes" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Formulario crear/editar -->
+            <div id="clienteForm" class="crudForm clienteForm">
+                <input type="hidden" id="clienteEditId">
+                <div class="formRow">
+                    <label>Nombre</label>
+                    <input type="text" id="clienteFormNombre" placeholder="Nombre del cliente" required>
+                </div>
+                <div class="formRow">
+                    <label>Teléfono</label>
+                    <input type="tel" id="clienteFormTelefono" placeholder="Número de teléfono">
+                </div>
+                <div class="formRow">
+                    <label>Correo</label>
+                    <input type="email" id="clienteFormCorreo" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="formButtons">
+                    <button type="button" id="clienteFormSubmit" class="btnGuardar">Guardar Cliente</button>
+                    <button type="button" id="clienteFormCancelar" class="btnCancelar remove">Cancelar Edición</button>
+                </div>
+            </div>
+
+            <!-- Buscador -->
+            <div class="clientesSearchBox">
+                <input type="search" id="clientesSearch" placeholder="Buscar cliente…">
+            </div>
+
+            <!-- Lista -->
+            <div id="clientesLista" class="crudProductList"></div>
+        </div>
+    </div>
+
+
+    <!-- ===================== COMPRAS MODAL ===================== -->
+    <div id="comprasOverlay" class="crudOverlay remove">
+        <div id="comprasModal" class="crudModal comprasModal">
+            <div class="crudHeader">
+                <h2><i class="fa-solid fa-cart-flatbed"></i> Registrar Compra</h2>
+                <button id="closeCompras" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Proveedor -->
+            <div class="formRow">
+                <label>Proveedor</label>
+                <select id="comprasProveedor">
+                    <option value="" disabled selected>Selecciona un proveedor</option>
+                </select>
+            </div>
+
+            <!-- Lista de ítems de compra -->
+            <div id="comprasItems" class="comprasItems"></div>
+
+            <!-- Botón agregar ítem -->
+            <button id="comprasAgregarItem" class="btnAgregarItemCompra">
+                <i class="fa-solid fa-plus"></i> Agregar producto
+            </button>
+
+            <!-- Totales -->
+            <div class="comprasTotales">
+                <div class="comprasTotalRow">
+                    <span>Total Calculado</span>
+                    <strong id="comprasTotalCalc">$0</strong>
+                </div>
+                <div class="comprasTotalRow comprasTotalEditRow">
+                    <label for="comprasTotalInput">Total Final</label>
+                    <div class="editableInputWrap">
+                        <span class="editablePrefix">$</span>
+                        <input id="comprasTotalInput" type="number" min="0" placeholder="0"
+                               class="inputTotalVenta" style="width:8em;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acción -->
+            <button id="comprasRegistrar" class="btnConfirmarFinal" style="margin-top:0.5em;">
+                <i class="fa-solid fa-receipt"></i> Registrar Compra
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================== RECIBO COMPRA MODAL ===================== -->
+    <div id="reciboCompraOverlay" class="crudOverlay remove">
+        <div id="reciboCompraModal" class="crudModal facturaModal">
+            <div class="crudHeader">
+                <h2><i class="fa-solid fa-receipt"></i> Recibo de Compra</h2>
+                <button id="closeReciboCompra" class="closeCrudBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="reciboCompraContenido" class="facturaContenido"></div>
+            <div class="facturaAcciones">
+                <button class="btnConfirmarFinal" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== HEADER ===================== -->
+    <div id="contInvi"></div>
+    <header class="header2">
+        <div class="BarraTop">
+            <div class="LogoContainer">
+                <a href="https://www.instagram.com/papeleriapapelyluna/" target="_blank">
+                    <picture>
+                        <source media="(max-width:1024px)" srcset="Resources/PapeleriaPapelYLunaLogo.jpg">
+                        <img src="Resources/PapeleriaPapelYLuna.jpg" alt="Logo de la papelería" class="logo" id="logo"
+                            title="Ir al Instagram">
+                    </picture>
+                </a>
+            </div>
+            <form class="buscador" id="buscador" onsubmit="return false;">
+                <input type="search" name="search" placeholder="Buscar producto" id="search">
+            </form>
+            <nav>
+                <a href="#contInvi" id="carritoLink" title="Ver carrito de compras"><i
+                        class="fa-solid fa-basket-shopping" id="icono"></i>
+                    <p id="contador">0</p>
+                </a>
+                <a href="#" id="openGestion" title="Gestión"><span class="txtNav">Gestión </span><i
+                        class="fa-solid fa-gears"></i></a>
+                <a href="#" id="openCompras" title="Registro de compras"><span class="txtNav">Compras </span><i
+                        class="fa-solid fa-cart-flatbed"></i></a>
+                <a href="#" id="openHistorial" title="Historial de ventas"><span class="txtNav">Ventas </span><i
+                        class="fa-solid fa-chart-line"></i></a>
+                <a href="#" id="openCrud" title="Gestionar productos"><span class="txtNav">CRUD </span><i
+                        class="fa-solid fa-screwdriver-wrench"></i></a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ===================== NOTIFICATION ===================== -->
+    <div id="alertaNoti" class="alertaNoti">
+        <div id="alertContent">
+            <span id="alertIcon">
+                <svg class="checkIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#F7F7F7" stroke-width="1.5"></circle>
+                    <path d="M8.5 12.5L10.5 14.5L15.5 9.5" stroke="#F7F7F7" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+
+
+                <!--<svg viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>cross-circle</title> <desc>Created with Sketch Beta.</desc> <defs> </defs> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"> <g id="Icon-Set" sketch:type="MSLayerGroup" transform="translate(-568.000000, -1087.000000)" fill="#F7F7F7"> <path d="M584,1117 C576.268,1117 570,1110.73 570,1103 C570,1095.27 576.268,1089 584,1089 C591.732,1089 598,1095.27 598,1103 C598,1110.73 591.732,1117 584,1117 L584,1117 Z M584,1087 C575.163,1087 568,1094.16 568,1103 C568,1111.84 575.163,1119 584,1119 C592.837,1119 600,1111.84 600,1103 C600,1094.16 592.837,1087 584,1087 L584,1087 Z M589.717,1097.28 C589.323,1096.89 588.686,1096.89 588.292,1097.28 L583.994,1101.58 L579.758,1097.34 C579.367,1096.95 578.733,1096.95 578.344,1097.34 C577.953,1097.73 577.953,1098.37 578.344,1098.76 L582.58,1102.99 L578.314,1107.26 C577.921,1107.65 577.921,1108.29 578.314,1108.69 C578.708,1109.08 579.346,1109.08 579.74,1108.69 L584.006,1104.42 L588.242,1108.66 C588.633,1109.05 589.267,1109.05 589.657,1108.66 C590.048,1108.27 590.048,1107.63 589.657,1107.24 L585.42,1103.01 L589.717,1098.71 C590.11,1098.31 590.11,1097.68 589.717,1097.28 L589.717,1097.28 Z" id="cross-circle" sketch:type="MSShapeGroup"> </path> </g> </g> </g></svg>-->
+
+
+            </span>
+            <span id="alertMsj"></span>
+            <span id="alertClose">
+                <svg class="closeIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M20.7457 3.32851C20.3552 2.93798 19.722 2.93798 19.3315 3.32851L12.0371 10.6229L4.74275 3.32851C4.35223 2.93798 3.71906 2.93798 3.32854 3.32851C2.93801 3.71903 2.93801 4.3522 3.32854 4.74272L10.6229 12.0371L3.32856 19.3314C2.93803 19.722 2.93803 20.3551 3.32856 20.7457C3.71908 21.1362 4.35225 21.1362 4.74277 20.7457L12.0371 13.4513L19.3315 20.7457C19.722 21.1362 20.3552 21.1362 20.7457 20.7457C21.1362 20.3551 21.1362 19.722 20.7457 19.3315L13.4513 12.0371L20.7457 4.74272C21.1362 4.3522 21.1362 3.71903 20.7457 3.32851Z"
+                        fill="#0F0F0F"></path>
+                </svg>
+            </span>
+        </div>
+    </div>
+
+    <!-- ===================== MAIN ===================== -->
+    <div class="app">
+        <main>
+            <div id="buscadorVacio">
+                <h2>No se encontró lo que buscas</h2>
+                <p>Prueba mirar otra cosa :)</p>
+                <img src="https://cdn-icons-png.flaticon.com/512/1178/1178479.png" alt="Nada" class="nadaEncontrado">
+            </div>
+
+            <section id="contenido"></section>
+
+            <!-- ===================== LIVE CART SIDEBAR ===================== -->
+            <div id="carroCompras">
+                <div id="containergrande">
+                    <div id="listaproductos">
+                        <div class="cartHeader">
+                            <h1 id="cartTitulo">Venta</h1>
+                            <div id="cartBadge"></div>
+                        </div>
+                        <div id="cartItemsContainer"></div>
+                        <div id="empty">
+                            <h2>Tu carrito está vacío</h2>
+                            <p>Agrega productos para verlos aquí.</p>
+                            <img src="https://cdn-icons-png.flaticon.com/512/17568/17568902.png" alt="carritovacio"
+                                class="CarritoVacio">
+                        </div>
+                    </div>
+                    <div id="payresult"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer id="footer">
+        <h3>Camilo Fajardo: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5132303c383d3e3730303211243f38223033303f307f3435247f323e">[email&#160;protected]
