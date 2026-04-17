@@ -799,7 +799,7 @@ footer {
     .tarjeta h2 { font-size: 0.92em; margin-top: 0; }
     .tarjeta p  { font-size: 0.78em; margin: 0; }
     .ponerCarro,
-    .disabledButton { font-size: 0.78em; margin-top: 0.4em; min-height: 2.4em; padding: 0.4em 0.6em; }
+    .disabledButton { font-size: 0.78em; margin-top: 0.4em; min-height: 2.4em; padding: 0.4em 0.6em; width: auto;}
     .categoriaBadge { font-size: 0.6em; }
 
     /* Buscador vacío */
