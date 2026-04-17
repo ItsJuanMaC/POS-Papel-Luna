@@ -904,6 +904,7 @@ footer {
     #gestionMenuPopup {
         min-width: 160px;
         font-size: 0.9em;
+        transform: translate(-50%, 0);
     }
 
     /* Empty states */
