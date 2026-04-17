@@ -377,20 +377,35 @@ function renderCart() {
     container.querySelectorAll(".eliminar").forEach(b => b.addEventListener("click", cartDelete));
 
     // ── Edición inline de precio ──────────────────────────────
+    // "input": actualiza subtotal y total en tiempo real mientras escribe
+    // Enter: bloqueado (el botón de nube es el único que sube precio a Sheets)
     container.querySelectorAll(".inputPrecio").forEach(input => {
-        input.addEventListener("change", function () {
+        // Bloquear Enter para que no dispare eventos no deseados
+        input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") e.preventDefault();
+        });
+
+        input.addEventListener("input", function () {
             const id        = this.dataset.id;
             const cartProd  = elementosComprados.find(p => p.id === id);
             if (!cartProd) return;
             const nuevoPrecio = Math.max(0, parseFloat(this.value) || 0);
-            this.value = nuevoPrecio;
             cartProd.precio = nuevoPrecio;
             // Actualizar subtotal visual sin re-renderizar
             const subEl = document.getElementById(`precio-${id}`);
             if (subEl) subEl.textContent = `$${(nuevoPrecio * cartProd.cantidad).toLocaleString()}`;
-            totalPersonalizado = null; // recalcular total automáticamente
+            totalPersonalizado = null;
             saveCart();
             _actualizarTotalUI();
+        });
+
+        // Al salir del campo, limpiar valor vacío
+        input.addEventListener("blur", function () {
+            if (this.value === "" || isNaN(parseFloat(this.value))) {
+                const id = this.dataset.id;
+                const cartProd = elementosComprados.find(p => p.id === id);
+                this.value = cartProd ? cartProd.precio : 0;
+            }
         });
     });
 

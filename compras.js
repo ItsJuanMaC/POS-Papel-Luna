@@ -9,8 +9,9 @@
 // ============================================================
 
 // ── Estado ───────────────────────────────────────────────────
-let _comprasItems      = [];  // [{ productoId, nombre, cantidad, costoUnit }]
-let _proveedoresCache  = [];  // [{ id, entidad }]
+let _comprasItems           = [];    // [{ productoId, nombre, cantidad, costoUnit }]
+let _proveedoresCache       = [];    // [{ id, entidad }]
+let _totalCompraPersonalizado = null; // null = auto, número = editado manualmente
 
 // ============================================================
 //  ABRIR MODAL
@@ -18,7 +19,8 @@ let _proveedoresCache  = [];  // [{ id, entidad }]
 
 document.getElementById("openCompras").addEventListener("click", async e => {
     e.preventDefault();
-    _comprasItems = [];
+    _comprasItems                = [];
+    _totalCompraPersonalizado   = null;
     document.getElementById("comprasTotalInput").value = "";
 
     const overlay = document.getElementById("comprasOverlay");
@@ -27,6 +29,7 @@ document.getElementById("openCompras").addEventListener("click", async e => {
     overlay.classList.add("crudVisible");
 
     await Promise.all([_cargarProveedores(), _renderComprasItems()]);
+    _iniciarListenersTotalCompra();
 });
 
 document.getElementById("closeCompras").addEventListener("click", cerrarComprasModal);
@@ -185,12 +188,47 @@ function _recalcularSubtotal(idx) {
 
 function _actualizarTotalCompra() {
     const totalCalc = _comprasItems.reduce((s, i) => s + (i.cantidad || 1) * (i.costoUnit || 0), 0);
-    const calcEl    = document.getElementById("comprasTotalCalc");
+
+    // Actualizar total calculado
+    const calcEl = document.getElementById("comprasTotalCalc");
     if (calcEl) calcEl.textContent = `$${totalCalc.toLocaleString()}`;
 
-    // Si el total final está vacío, sugerirlo
+    // Actualizar total final solo si NO hay valor manual
+    const totalInput  = document.getElementById("comprasTotalInput");
+    const resetBtn    = document.getElementById("comprasBtnResetTotal");
+    if (!totalInput) return;
+
+    if (_totalCompraPersonalizado === null) {
+        totalInput.value = totalCalc;
+        if (resetBtn) resetBtn.classList.add("remove");
+    } else {
+        totalInput.value = _totalCompraPersonalizado;
+        if (resetBtn) resetBtn.classList.remove("remove");
+    }
+}
+
+// Escuchar edición manual del total final (se llama una vez al iniciar el modal)
+function _iniciarListenersTotalCompra() {
     const totalInput = document.getElementById("comprasTotalInput");
-    if (totalInput && !totalInput.value) totalInput.value = totalCalc;
+    const resetBtn   = document.getElementById("comprasBtnResetTotal");
+    if (!totalInput) return;
+
+    totalInput.addEventListener("input", function () {
+        const v = parseFloat(this.value);
+        _totalCompraPersonalizado = (!isNaN(v) && v >= 0) ? v : null;
+        if (resetBtn) {
+            resetBtn.classList.toggle("remove", _totalCompraPersonalizado === null);
+        }
+    });
+
+    totalInput.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });
+
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+            _totalCompraPersonalizado = null;
+            _actualizarTotalCompra();
+        });
+    }
 }
 
 // Botón agregar ítem
@@ -223,7 +261,8 @@ document.getElementById("comprasRegistrar").addEventListener("click", async () =
         return;
     }
 
-    const totalFinal = parseFloat(document.getElementById("comprasTotalInput").value) || 0;
+    const totalCalcFinal = _comprasItems.reduce((s, i) => s + (i.cantidad || 1) * (i.costoUnit || 0), 0);
+    const totalFinal = (_totalCompraPersonalizado !== null) ? _totalCompraPersonalizado : totalCalcFinal;
     const proveedor  = _proveedoresCache.find(p => p.id === proveedorId);
     const fecha      = new Date().toLocaleString("es-CO");
     const id         = "C-" + Date.now();
@@ -261,7 +300,10 @@ document.getElementById("comprasRegistrar").addEventListener("click", async () =
             }
         }
 
-        // 3. Mostrar recibo
+        // 3. Reset total personalizado
+        _totalCompraPersonalizado = null;
+
+        // 4. Mostrar recibo
         _mostrarReciboCompra({ id, fecha, proveedor: proveedor?.entidad || "—", items: itemsValidos, total: totalFinal });
 
         cerrarComprasModal();
